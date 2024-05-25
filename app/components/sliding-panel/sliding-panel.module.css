@@ -8,24 +8,24 @@
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
     transition: right 0.3s;
     z-index: 1000;
-  }
-  
-  .open {
+}
+
+.open {
     right: 0;
-  }
-  
-  .content {
+}
+
+.content {
     padding: 20px;
-  }
-  
-  .panelButton {
+}
+
+.panelButton {
     position: absolute;
     top: 10px;
-    left: -50px;
-    width: 40px;
+    left: -150px;
+    width: 140px;
     height: 40px;
     background-color: #0070f3;
     color: white;
     border: none;
     cursor: pointer;
-  }
+}

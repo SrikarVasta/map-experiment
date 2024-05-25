@@ -21,7 +21,7 @@ export const initializeMap = (target, setMap) => {
     target,
     view: new View({
       center: [-11000000, 4600000],
-      zoom: 4,
+      zoom: 5,
     }),
   });
 
@@ -54,6 +54,7 @@ export const createGeometryFunction = (type) => {
           newCoordinates.push([center[0] + offsetX, center[1] + offsetY]);
         }
         newCoordinates.push(newCoordinates[0].slice());
+        console.log(newCoordinates)
         if (!geometry) {
           geometry = new Polygon([newCoordinates]);
         } else {

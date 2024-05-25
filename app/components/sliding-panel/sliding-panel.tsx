@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import useMapStore from '../store';
-import styles from './sliding-panel.module.css';
+import React from "react";
+import useMapStore from "../store";
+import styles from "./sliding-panel.module.css";
 
 const SlidingPanel = () => {
   const { isPanelOpen, togglePanel, setDrawType, drawType } = useMapStore();
@@ -12,53 +12,50 @@ const SlidingPanel = () => {
   };
 
   return (
-    <div className={`${styles.panel} ${isPanelOpen ? styles.open : ''}`}>
+    <div className={`${styles.panel} ${isPanelOpen ? styles.open : ""}`}>
       <button className={styles.panelButton} onClick={togglePanel}>
-        {isPanelOpen ? 'Close Panel' : 'Open Panel'}
+        {isPanelOpen ? "Close Panel" : "Open Panel"}
       </button>
       {isPanelOpen && (
         <div className={styles.content}>
           <h2>Select Shape</h2>
           <form>
-            <label>
+            <div>
               <input
                 type="radio"
                 value="None"
-                checked={drawType === 'None'}
+                checked={drawType === "None"}
                 onChange={handleChange}
               />
-              None
-            </label>
-            <br />
-            <label>
+              <label className="text-black">None</label>
+            </div>
+            <div>
               <input
                 type="radio"
                 value="Square"
-                checked={drawType === 'Square'}
+                checked={drawType === "Square"}
                 onChange={handleChange}
               />
-              Square
-            </label>
-            <br />
-            <label>
+              <label className="text-black">Square</label>
+            </div>
+            <div>
               <input
                 type="radio"
                 value="Box"
-                checked={drawType === 'Box'}
+                checked={drawType === "Box"}
                 onChange={handleChange}
               />
-              Box
-            </label>
-            <br />
-            <label>
+              <label className="text-black">Box</label>
+            </div>
+            <div>
               <input
                 type="radio"
                 value="Star"
-                checked={drawType === 'Star'}
+                checked={drawType === "Star"}
                 onChange={handleChange}
               />
-              Star
-            </label>
+              <label className="text-black">Star</label>
+            </div>
           </form>
         </div>
       )}
