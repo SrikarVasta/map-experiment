@@ -19,15 +19,10 @@ const MapClientComponent = ({ shapes }) => {
   const vectorSourceRef = useRef(new VectorSource({ wrapX: false }));
 
   useEffect(() => {
-    const map = initializeMap(
-      mapElement.current,
-      setMap,
-      vectorSourceRef.current,
-    );
-
+    const map = initializeMap(mapElement.current, vectorSourceRef.current);
+    console.log(vectorSourceRef);
     // Add shapes to the map
-    console.log(shapes);
-    if (shapes?.shapes?.length) {
+    if (shapes?.shapes.length) {
       shapes.shapes.forEach(({ type, coordinates }) => {
         const geometryFunction = createGeometryFunction(type);
         const geometry = geometryFunction(coordinates);
@@ -35,6 +30,16 @@ const MapClientComponent = ({ shapes }) => {
         vectorSourceRef.current.addFeature(feature);
       });
     }
+    const layers = map.getLayers();
+    layers.forEach((layer) => {
+      if (layer instanceof VectorLayer) {
+        layer.setSource(vectorSourceRef.current);
+      }
+    });
+    console.log(vectorSourceRef);
+    map.setLayers(layers);
+
+    setMap(map);
 
     return () => {
       map.setTarget(null);
@@ -66,7 +71,6 @@ const MapClientComponent = ({ shapes }) => {
     if (drawType === "None") return;
 
     const geometryFunction = createGeometryFunction(drawType);
-
     const draw = new Draw({
       source: vectorSourceRef.current,
       type:
@@ -78,7 +82,12 @@ const MapClientComponent = ({ shapes }) => {
 
     draw.on("drawend", (event) => {
       const geometry = event.feature.getGeometry();
-      const coordinates = geometry.getCoordinates();
+      let calcGeometry = geometry;
+      if(geometry?.geometries_){
+        calcGeometry = geometry?.geometries_[0];
+      }
+      console.log(geometry)
+      const coordinates = calcGeometry.getCoordinates();
       const shape = {
         type: drawType,
         coordinates,
@@ -91,7 +100,7 @@ const MapClientComponent = ({ shapes }) => {
 
     map.addInteraction(draw);
     drawRef.current = draw;
-
+    console.log( map.getLayers());
     return () => {
       if (map) {
         map.removeInteraction(draw);

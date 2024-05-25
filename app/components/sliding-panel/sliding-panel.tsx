@@ -41,8 +41,8 @@ const SlidingPanel = () => {
             <div>
               <input
                 type="radio"
-                value="Box"
-                checked={drawType === "Box"}
+                value="Circle"
+                checked={drawType === "Circle"}
                 onChange={handleChange}
               />
               <label className="text-black">Box</label>

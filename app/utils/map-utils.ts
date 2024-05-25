@@ -3,14 +3,17 @@ import TileLayer from 'ol/layer/Tile';
 import { OSM, Vector as VectorSource } from 'ol/source';
 import VectorLayer from 'ol/layer/Vector';
 import Draw, { createBox, createRegularPolygon } from 'ol/interaction/Draw';
-import Polygon from 'ol/geom/Polygon';
+import Polygon, { circular } from 'ol/geom/Polygon';
+import { GeometryCollection, Point } from 'ol/geom';
+import { transform } from 'ol/proj';
+import {getDistance} from 'ol/sphere.js';
 
-export const initializeMap = (target, setMap) => {
+export const initializeMap = (target,source) => {
   const raster = new TileLayer({
     source: new OSM(),
   });
 
-  const source = new VectorSource({ wrapX: false });
+  // const source = new VectorSource({ wrapX: false });
 
   const vector = new VectorLayer({
     source: source,
@@ -25,7 +28,6 @@ export const initializeMap = (target, setMap) => {
     }),
   });
 
-  setMap(map);
 
   return map;
 };
@@ -34,8 +36,26 @@ export const createGeometryFunction = (type) => {
   switch (type) {
     case 'Square':
       return createRegularPolygon(4);
-    case 'Box':
-      return createBox();
+    case 'Circle':
+      return (coordinates,geometry,projection) => {
+        if (!geometry) {
+          geometry = new GeometryCollection([
+            new Polygon([]),
+            new Point(coordinates[0]),
+          ]);
+        }
+        const geometries = geometry.getGeometries();
+        const center = transform(coordinates[0], projection, 'EPSG:4326');
+        const last = transform(coordinates[1], projection, 'EPSG:4326');
+        const radius = getDistance(center, last);
+        const circle = circular(center, radius, 128);
+        circle.transform('EPSG:4326', projection);
+        geometries[0].setCoordinates(circle.getCoordinates());
+        geometry.setGeometries(geometries);
+        return geometry;
+      }
+      case 'Box':
+        return createBox()
     case 'Star':
       return (coordinates, geometry) => {
         const center = coordinates[0];
@@ -54,7 +74,6 @@ export const createGeometryFunction = (type) => {
           newCoordinates.push([center[0] + offsetX, center[1] + offsetY]);
         }
         newCoordinates.push(newCoordinates[0].slice());
-        console.log(newCoordinates)
         if (!geometry) {
           geometry = new Polygon([newCoordinates]);
         } else {
