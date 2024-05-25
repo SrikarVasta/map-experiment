@@ -11,6 +11,7 @@ import Polygon from "ol/geom/Polygon";
 import Feature from "ol/Feature";
 import useMapStore from "../store";
 import { initializeMap, createGeometryFunction } from "../../utils/map-utils";
+import { MultiPolygon } from "ol/geom";
 
 const MapClientComponent = ({ shapes }) => {
   const mapElement = useRef();
@@ -25,7 +26,8 @@ const MapClientComponent = ({ shapes }) => {
     if (shapes?.shapes.length) {
       shapes.shapes.forEach(({ type, coordinates }) => {
         const geometryFunction = createGeometryFunction(type);
-        const geometry = geometryFunction(coordinates);
+        // const geometry = geometryFunction(coordinates);
+        const geometry = new MultiPolygon([coordinates]);
         const feature = new Feature({ geometry });
         vectorSourceRef.current.addFeature(feature);
       });
@@ -37,7 +39,6 @@ const MapClientComponent = ({ shapes }) => {
       }
     });
     console.log(vectorSourceRef);
-    map.setLayers(layers);
 
     setMap(map);
 
