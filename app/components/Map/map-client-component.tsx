@@ -13,11 +13,26 @@ import useMapStore from "../store";
 import { initializeMap, createGeometryFunction } from "../../utils/map-utils";
 import { MultiPolygon } from "ol/geom";
 
+const url: string = "http://localhost:3000/api";
+
 const MapClientComponent = ({ shapes }) => {
   const mapElement = useRef();
   const { setMap, drawType } = useMapStore();
   const drawRef = useRef();
   const vectorSourceRef = useRef(new VectorSource({ wrapX: false }));
+  const postShape = async (shape) => {
+    const res = await fetch(`${url}/shapes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(shape),
+    });
+    if (!res.ok) {
+      return [];
+    }
+    return res.json();
+  };
 
   useEffect(() => {
     const map = initializeMap(mapElement.current, vectorSourceRef.current);
@@ -47,20 +62,8 @@ const MapClientComponent = ({ shapes }) => {
     };
   }, [setMap, shapes]);
 
+
   useEffect(() => {
-    const postShape = async (shape) => {
-      const res = await fetch("http://localhost:3000/api/shapes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(shape),
-      });
-      if (!res.ok) {
-        return [];
-      }
-      return res.json();
-    };
 
     const { map } = useMapStore.getState();
     if (!map) return;
@@ -84,10 +87,10 @@ const MapClientComponent = ({ shapes }) => {
     draw.on("drawend", (event) => {
       const geometry = event.feature.getGeometry();
       let calcGeometry = geometry;
-      if(geometry?.geometries_){
+      if (geometry?.geometries_) {
         calcGeometry = geometry?.geometries_[0];
       }
-      console.log(geometry)
+      console.log(geometry);
       const coordinates = calcGeometry.getCoordinates();
       const shape = {
         type: drawType,
@@ -101,7 +104,7 @@ const MapClientComponent = ({ shapes }) => {
 
     map.addInteraction(draw);
     drawRef.current = draw;
-    console.log( map.getLayers());
+    console.log(map.getLayers());
     return () => {
       if (map) {
         map.removeInteraction(draw);
