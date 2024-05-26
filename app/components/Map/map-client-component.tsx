@@ -1,70 +1,47 @@
 "use client";
 
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef } from "react";
 import "ol/ol.css";
-import { Map, View } from "ol";
-import TileLayer from "ol/layer/Tile";
-import { OSM, Vector as VectorSource } from "ol/source";
+import { Vector as VectorSource } from "ol/source";
 import VectorLayer from "ol/layer/Vector";
-import Draw, { createBox, createRegularPolygon } from "ol/interaction/Draw";
-import Polygon from "ol/geom/Polygon";
-import Feature from "ol/Feature";
+import Draw from "ol/interaction/Draw";
 import useMapStore from "../store";
-import { initializeMap, createGeometryFunction } from "../../utils/map-utils";
-import { MultiPolygon } from "ol/geom";
-
-const url: string = "http://localhost:3000/api";
+import { initializeMap } from "../../utils/map-utils";
+import { getDraw, getFeature, handleDrawEnd } from "./map.helpers";
 
 const MapClientComponent = ({ shapes }) => {
   const mapElement = useRef();
   const { setMap, drawType } = useMapStore();
-  const drawRef = useRef();
+  const drawRef = useRef<Draw>();
   const vectorSourceRef = useRef(new VectorSource({ wrapX: false }));
-  const postShape = async (shape) => {
-    const res = await fetch(`${url}/shapes`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(shape),
-    });
-    if (!res.ok) {
-      return [];
-    }
-    return res.json();
-  };
 
   useEffect(() => {
     const map = initializeMap(mapElement.current, vectorSourceRef.current);
-    console.log(vectorSourceRef);
-    // Add shapes to the map
-    if (shapes?.shapes.length) {
-      shapes.shapes.forEach(({ type, coordinates }) => {
-        const geometryFunction = createGeometryFunction(type);
-        // const geometry = geometryFunction(coordinates);
-        const geometry = new MultiPolygon([coordinates]);
-        const feature = new Feature({ geometry });
-        vectorSourceRef.current.addFeature(feature);
-      });
+
+    if (shapes?.shapes?.length) {
+      shapes.shapes.forEach(
+        ({ type, coordinates }: { type: string; coordinates: any[] }) => {
+          const feature = getFeature(coordinates, type);
+          vectorSourceRef.current.addFeature(feature);
+        },
+      );
     }
+
     const layers = map.getLayers();
     layers.forEach((layer) => {
       if (layer instanceof VectorLayer) {
         layer.setSource(vectorSourceRef.current);
       }
     });
-    console.log(vectorSourceRef);
 
     setMap(map);
 
     return () => {
-      map.setTarget(null);
+      map.setTarget(undefined);
     };
   }, [setMap, shapes]);
 
-
   useEffect(() => {
-
     const { map } = useMapStore.getState();
     if (!map) return;
 
@@ -74,37 +51,14 @@ const MapClientComponent = ({ shapes }) => {
 
     if (drawType === "None") return;
 
-    const geometryFunction = createGeometryFunction(drawType);
-    const draw = new Draw({
-      source: vectorSourceRef.current,
-      type:
-        drawType === "Square" || drawType === "Box" || drawType === "Star"
-          ? "Circle"
-          : drawType,
-      geometryFunction,
-    });
+    const draw = getDraw(vectorSourceRef, drawType);
 
     draw.on("drawend", (event) => {
-      const geometry = event.feature.getGeometry();
-      let calcGeometry = geometry;
-      if (geometry?.geometries_) {
-        calcGeometry = geometry?.geometries_[0];
-      }
-      console.log(geometry);
-      const coordinates = calcGeometry.getCoordinates();
-      const shape = {
-        type: drawType,
-        coordinates,
-      };
-
-      if (shape) {
-        postShape(shape);
-      }
+      handleDrawEnd(event, drawType);
     });
 
     map.addInteraction(draw);
     drawRef.current = draw;
-    console.log(map.getLayers());
     return () => {
       if (map) {
         map.removeInteraction(draw);
